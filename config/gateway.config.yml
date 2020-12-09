@@ -1,0 +1,183 @@
+
+http:
+  port: ${HTTP_PORT} 
+
+apiEndpoints: 
+  login: 
+    paths: 
+      - '/login'
+  validate:
+    paths:
+      - '/validate-session'
+  g1: 
+    paths:
+      - '/api/user/*'
+      - '/api/unit/*'
+      - '/api/unit-offering/*'
+      - '/api/project/*'
+      - '/api/student/*'
+
+  g2: 
+    paths:
+      - '/marking/assessment/add_assessment'
+      - '/marking/assessment/remove_assessment'
+      - '/marking/assessment/view_assessment'
+      - '/marking/assessment/modify_assessment'
+      - '/marking/assessment/get_assigned_groups'
+      - '/marking/assessment/remove_assessment_mark'
+      - '/marking/assessment/view_assessment_mark'
+      - '/marking/assessment/modify_assessment_mark'
+      - '/marking/assessment/export_csv'
+      - '/marking/assessment/export_component_csv'
+      - '/marking/assessment/add_assessment_staff'
+      - '/marking/assessment/view_assessment_staff'
+      - '/marking/assessment/remove_assessment_staff'
+      - '/marking/assessment/view_user'
+      - '/reimbursement/add_budget_item'
+      - '/reimbursement/delete_budget_item'
+      - '/reimbursement/edit_budget_item'
+      - '/reimbursement/add_remark'
+      - '/reimbursement/list_budgets'
+      - '/reimbursement/group_id'
+      - '/reimbursement/group_name'
+      - '/reimbursement/modify_guideline'
+      - '/reimbursement/download_guideline'
+      - '/reimbursement/list_groups'
+      - '/reimbursement/list_voucher_recipients'
+      - '/reimbursement/add_voucher_recipient'
+      - '/reimbursement/edit_voucher_recipient'
+      - '/reimbursement/delete_voucher_recipient'
+      - '/reimbursement/upload_file'
+      - '/reimbursement/list_files'
+      - '/reimbursement/file/:filename'
+      - '/reimbursement/get_form'
+      - '/reimbursement/get_formd'
+      - '/super_admin/set_budget'
+      - '/super_admin/get_budget'
+
+  logout:
+    paths:
+      - '/logout'
+  g3:
+    paths:
+      - '/artefact/*'
+      - '/showcase/*'
+      - '/appointment/*'
+  
+  test:
+    paths:
+      - '/_ping'
+
+     
+serviceEndpoints:
+  login:
+    url: ${G3_BE}
+  g1-be:
+    url: ${G1_BE}
+  g2-be:
+    url: ${G2_BE}  
+  g3-be:
+    url: ${G3_BE}
+
+cors: &cors
+  - action: 
+      origin: true # to be changed to restrict traffic
+      credentials: true
+      methods: 'GET, HEAD,PUT,POST,DELETE'
+      allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept'
+log: &log
+  - action:
+      message: ${req.method} ${req.originalUrl} ${res.statusCode} ${req.headers.cookie} # parameter for log actio
+
+policies:
+  - store_token
+  - proxy
+  - logout
+  - cors
+  - validate_session
+  - log
+
+pipelines:
+  test-pipeline:
+    apiEndpoints:
+      - test
+    policies:
+      - cors: *cors
+      - proxy:
+          - action:
+              serviceEndpoint: g3-be
+      
+  login-pipeline:
+    apiEndpoints:
+      - login
+    policies:
+      - log: *log
+      - cors: *cors
+      - store_token:
+          - action:
+              env: ${ENV}
+      - proxy:
+          - action:
+              serviceEndpoint: login           
+
+  logout-pipeline:
+    apiEndpoints:
+      - logout
+    policies:
+      - log: *log
+      - cors: *cors
+      - logout:
+  
+  validate-page-pipeline:
+    apiEndpoints:
+      - validate
+    policies:
+      - log: *log
+      - cors: *cors
+      - validate_session:
+          - action:
+              level: 'page'
+
+  g1-pipeline:
+    apiEndpoints:
+      - g1
+    policies:
+      - log: *log
+      - cors: *cors
+      - validate_session:
+          - action:
+              level: 'api_request'
+      - proxy:                                                                                            
+          - action:
+              xfwd: true
+              serviceEndpoint: g1-be 
+  g2-pipeline:
+    apiEndpoints:
+      - g2
+    policies:
+      - log: *log
+      - cors: *cors
+      - validate_session:
+          - action:
+              level: 'api_request'
+      - proxy:
+          - action:
+              xfwd: true
+              serviceEndpoint: g2-be 
+
+  g3-pipeline:
+    apiEndpoints:
+      - g3
+    policies:
+      - log: *log
+      - cors: *cors
+      - validate_session:
+          - action:
+              level: 'api_request'
+      - proxy:
+          - action:
+              xfwd: true
+              serviceEndpoint: g3-be 
+            
+    
+    

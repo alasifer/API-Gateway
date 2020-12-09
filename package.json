@@ -1,0 +1,17 @@
+{
+  "name": "api_gateway",
+  "description": "Express Gateway Instance Bootstraped from Command Line",
+  "repository": {},
+  "license": "UNLICENSED",
+  "version": "1.0.0",
+  "main": "server.js",
+  "dependencies": {
+    "connect-redis": "^4.0.4",
+    "dotenv": "^8.2.0",
+    "express-gateway": "^1.16.10",
+    "express-session": "^1.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "redis": "^3.0.2",
+    "uuid": "^8.1.0"
+  }
+}
